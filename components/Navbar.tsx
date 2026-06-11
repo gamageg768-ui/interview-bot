@@ -6,6 +6,7 @@ import { signIn, signOut, useSession } from 'next-auth/react';
 import {
   BrainCircuit, History, Home, BarChart2,
   BookMarked, CalendarClock, Layers, GitBranch, GraduationCap, LogIn, LogOut,
+  Mail, Search, DollarSign, CalendarDays, Timer,
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -19,6 +20,11 @@ export default function Navbar() {
     { href: '/pipeline', label: 'Pipeline', icon: GitBranch },
     { href: '/planner', label: 'Planner', icon: CalendarClock },
     { href: '/viva', label: 'Viva', icon: GraduationCap },
+    { href: '/mock-day', label: 'Mock Day', icon: CalendarDays },
+    { href: '/negotiate', label: 'Negotiate', icon: DollarSign },
+    { href: '/email-templates', label: 'Emails', icon: Mail },
+    { href: '/search', label: 'Search', icon: Search },
+    { href: '/countdown', label: 'Countdown', icon: Timer },
     { href: '/analytics', label: 'Analytics', icon: BarChart2 },
     { href: '/question-bank', label: 'Saved', icon: BookMarked },
     { href: '/history', label: 'History', icon: History },

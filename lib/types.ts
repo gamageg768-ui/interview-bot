@@ -87,6 +87,42 @@ export interface PresentationAssessment {
   verdict: string;
 }
 
+// Feature 4 — Email Templates
+export type EmailTemplateType = 'thank-you' | 'follow-up' | 'withdrawal' | 'counter-offer' | 'acceptance';
+export interface EmailContext {
+  interviewerName: string;
+  companyName: string;
+  role: string;
+  yourName: string;
+  additionalContext?: string;
+}
+
+// Feature 6 — Answer Quality Metrics
+export interface AnswerMetrics {
+  wordCount: number;
+  estimatedSpeakingTimeSec: number;
+  topicCoveragePercent: number;
+  structureScore: number;
+}
+
+// Feature 9 — Salary Negotiation
+export interface NegotiationScenario {
+  role: string;
+  company: string;
+  offeredSalary: number;
+  targetSalary: number;
+  yearsExperience: number;
+}
+export interface NegotiationTurn {
+  role: 'user' | 'recruiter';
+  message: string;
+}
+export interface NegotiationResponse {
+  aiMessage: string;
+  isComplete: boolean;
+  finalOffer?: number;
+}
+
 export interface SavedSession {
   id: string;
   type: string;

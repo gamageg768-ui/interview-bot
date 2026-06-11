@@ -12,6 +12,8 @@ import Navbar from '@/components/Navbar';
 import ProgressBar from '@/components/ProgressBar';
 import FeedbackCard from '@/components/FeedbackCard';
 import VoiceInput from '@/components/VoiceInput';
+import AnswerMetricsPanel from '@/components/AnswerMetricsPanel';
+import { computeAnswerMetrics } from '@/lib/answer-metrics';
 import type { Question, AnswerFeedback, InterviewType, CoachingReport } from '@/lib/types';
 import clsx from 'clsx';
 
@@ -817,6 +819,12 @@ function InterviewSession() {
             </div>
 
             <FeedbackCard feedback={currentFeedback} questionNumber={currentIdx + 1} />
+
+            {lastAnswer && questions[currentIdx] && (
+              <AnswerMetricsPanel
+                metrics={computeAnswerMetrics(lastAnswer, questions[currentIdx].expectedTopics)}
+              />
+            )}
 
             {/* Stress Challenge */}
             {config.stressMode && (

@@ -2,6 +2,7 @@ import Groq from 'groq-sdk';
 import type {
   InterviewType, Difficulty, Question, AnswerFeedback,
   PresentationAssessment, CoachingReport, PlanDay, ResumeProfile,
+  EmailTemplateType, EmailContext, NegotiationScenario, NegotiationTurn, NegotiationResponse,
 } from './types';
 import type { SlideContent } from './pptx';
 
@@ -433,4 +434,86 @@ Generate exactly ${count} ${difficulty}-level Q&A questions. ${difficultyNote}.`
   const content = response.choices[0]?.message?.content ?? '{}';
   const clean = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
   return JSON.parse(clean);
+}
+
+// ── Email templates ──────────────────────────────────────────────────────────
+
+const EMAIL_INSTRUCTIONS: Record<EmailTemplateType, string> = {
+  'thank-you': 'Write a professional thank-you email after an interview. Express genuine appreciation, reference one specific thing discussed, and reaffirm interest.',
+  'follow-up': 'Write a professional follow-up email when you have not heard back. Be polite and brief; reiterate interest and ask for a status update.',
+  'withdrawal': 'Write a gracious email withdrawing from the hiring process. Be brief, thankful, and leave the door open for future opportunities.',
+  'counter-offer': 'Write a professional email to negotiate a job offer. Be confident but collaborative; propose a specific number and briefly justify it.',
+  'acceptance': 'Write a formal offer acceptance email. Confirm start date, express enthusiasm, and thank everyone involved.',
+};
+
+export async function generateEmailTemplate(
+  templateType: EmailTemplateType,
+  ctx: EmailContext
+): Promise<string> {
+  const instruction = EMAIL_INSTRUCTIONS[templateType];
+  const additionalLine = ctx.additionalContext?.trim()
+    ? `\nAdditional context: ${ctx.additionalContext.trim()}`
+    : '';
+
+  const prompt = `${instruction}
+
+Recipient: ${ctx.interviewerName} at ${ctx.companyName}
+Role: ${ctx.role}
+Sender: ${ctx.yourName}${additionalLine}
+
+Return ONLY the email body (no subject line, no JSON, no markdown). Use plain professional language. Keep it under 200 words.`;
+
+  const response = await groq.chat.completions.create({
+    model: MODEL,
+    messages: [{ role: 'user', content: prompt }],
+    temperature: 0.6,
+    max_tokens: 400,
+  });
+
+  return response.choices[0]?.message?.content?.trim() ?? '';
+}
+
+// ── Salary negotiation ───────────────────────────────────────────────────────
+
+export async function runNegotiationTurn(
+  scenario: NegotiationScenario,
+  history: NegotiationTurn[],
+  userMessage: string
+): Promise<NegotiationResponse> {
+  const historyText = history
+    .map(t => `${t.role === 'recruiter' ? 'Recruiter' : 'Candidate'}: ${t.message}`)
+    .join('\n');
+
+  const prompt = `You are a realistic HR recruiter at ${scenario.company} negotiating compensation for a ${scenario.role} role.
+
+Offer details: Current offer $${scenario.offeredSalary.toLocaleString()} | Candidate target $${scenario.targetSalary.toLocaleString()} | Years experience: ${scenario.yearsExperience}
+
+Rules:
+- Start firm, willing to move max 15% above initial offer over 6-8 turns
+- Respond naturally to candidate tactics (market data, competing offers, skills)
+- After 6-8 total turns, close with a final offer
+- Respond in 2-3 sentences max
+
+Conversation so far:
+${historyText || '(conversation just started)'}
+
+Candidate just said: "${userMessage}"
+
+Respond as the recruiter. Return ONLY valid JSON:
+{
+  "aiMessage": "Your recruiter response (2-3 sentences)",
+  "isComplete": <true if this is your final offer and negotiation is done>,
+  "finalOffer": <number if isComplete is true, otherwise omit>
+}`;
+
+  const response = await groq.chat.completions.create({
+    model: MODEL,
+    messages: [{ role: 'user', content: prompt }],
+    temperature: 0.7,
+    max_tokens: 300,
+  });
+
+  const content = response.choices[0]?.message?.content ?? '{}';
+  const clean = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+  return JSON.parse(clean) as NegotiationResponse;
 }
