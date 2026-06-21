@@ -40,19 +40,21 @@ export default function NegotiatePage() {
       return;
     }
     setError('');
-    setHistory([]);
     setFinalOffer(null);
     setPhase('chat');
-    await sendMessage("Hi, I'm excited about the offer. I'd like to discuss the compensation package.");
+    // Pass empty history explicitly — setHistory([]) hasn't flushed yet
+    await sendMessage("Hi, I'm excited about the offer. I'd like to discuss the compensation package.", []);
   }
 
-  async function sendMessage(msg?: string) {
+  async function sendMessage(msg?: string, historySnapshot?: NegotiationTurn[]) {
     const userMsg = (msg ?? input).trim();
     if (!userMsg) return;
     if (!msg) setInput('');
 
+    // Use the passed snapshot (for first-turn) or current state
+    const prevHistory = historySnapshot ?? history;
     const newHistory: NegotiationTurn[] = [
-      ...history,
+      ...prevHistory,
       { role: 'user', message: userMsg },
     ];
     setHistory(newHistory);
@@ -62,7 +64,7 @@ export default function NegotiatePage() {
       const res = await fetch('/api/negotiate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ scenario, history, userMessage: userMsg }),
+        body: JSON.stringify({ scenario, history: prevHistory, userMessage: userMsg }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed');

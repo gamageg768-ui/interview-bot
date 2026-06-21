@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Navbar from '@/components/Navbar';
 import Link from 'next/link';
 import { Search, BookMarked, History, SlidersHorizontal } from 'lucide-react';
@@ -63,7 +63,7 @@ export default function SearchPage() {
 
   const q = debouncedQuery.toLowerCase().trim();
 
-  const filteredSessions = useCallback(() => {
+  const fSessions = useMemo(() => {
     if (source === 'bookmarks') return [];
     return sessions.filter(s => {
       if (typeFilter && s.type !== typeFilter) return false;
@@ -78,7 +78,7 @@ export default function SearchPage() {
     });
   }, [sessions, q, source, typeFilter]);
 
-  const filteredBookmarks = useCallback(() => {
+  const fBookmarks = useMemo(() => {
     if (source === 'sessions') return [];
     return bookmarks.filter(b => {
       if (typeFilter && b.type !== typeFilter) return false;
@@ -91,13 +91,11 @@ export default function SearchPage() {
     });
   }, [bookmarks, q, source, typeFilter]);
 
-  const allTypes = Array.from(new Set([
+  const allTypes = useMemo(() => Array.from(new Set([
     ...sessions.map(s => s.type),
     ...bookmarks.map(b => b.type),
-  ])).sort();
+  ])).sort(), [sessions, bookmarks]);
 
-  const fSessions = filteredSessions();
-  const fBookmarks = filteredBookmarks();
   const totalResults = fSessions.length + fBookmarks.length;
 
   return (

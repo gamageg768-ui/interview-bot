@@ -102,8 +102,9 @@ export default function CountdownPage() {
   const countdown = getCountdown();
   const daysUntil = countdown ? Math.ceil(countdown.total / 86400000) : 0;
 
+  // Show tasks whose threshold has been reached (task becomes relevant when daysUntil <= threshold)
   const activeItems = setup
-    ? CHECKLIST_TEMPLATE.filter(item => item.daysThreshold >= daysUntil || daysUntil >= item.daysThreshold)
+    ? CHECKLIST_TEMPLATE.filter(item => item.daysThreshold >= daysUntil)
     : [];
   const completedCount = activeItems.filter(i => checked[i.id]).length;
 
